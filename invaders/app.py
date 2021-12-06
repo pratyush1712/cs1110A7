@@ -163,7 +163,6 @@ class Invaders(GameApp):
         elif self._state == STATE_ACTIVE:
             self._life = GLabel(text = f"lives: {self._lives}",font_size=60, left=5, bottom=5, x=120, y=24*GAME_HEIGHT/25)
             resp = self._wave.update(self.input, dt, self.view, self.sound)
-            print(resp)
             if resp:
                 self._lives-=1
                 self._state = STATE_PAUSED
@@ -177,9 +176,9 @@ class Invaders(GameApp):
                 self.win = True
         elif self._state == STATE_PAUSED:
             self._life = GLabel(text = f"lives: {self._lives}",font_size=60, left=5, bottom=5, x=120, y=24*GAME_HEIGHT/25)
-            self._wave.draw(self.view)
-            self._text = GLabel(text = "type r to continue",font_size=60, left=5, bottom=5, x=GAME_WIDTH/2, y=GAME_HEIGHT/2)
-            if self.input.is_key_down('r'):
+            self._wave.draw(self.viewt)
+            self._text = GLabel(text = "press s to continue",font_size=60, left=5, bottom=5, x=GAME_WIDTH/2, y=GAME_HEIGHT/2)
+            if self.input.is_key_down('s'):
                 self._state = STATE_CONTINUE
                 self._text = None
         elif self._state == STATE_CONTINUE:
