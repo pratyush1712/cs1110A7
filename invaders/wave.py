@@ -125,13 +125,12 @@ class Wave(object):
         self.fireBolt(input, sound)
         self.updateBolts()
         alienLine = self.alienBoltCol_andDline()
-        if alienLine is False:
-            return False
+        if alienLine is not None:
+            return alienLine
         ship = self.shipDeath()
         if ship is not None:
             return ship
         aliensLeft = self.aliensCount()
-        print(aliensLeft)
         if aliensLeft == 0:
             return 0
         self.draw(view)
@@ -179,7 +178,7 @@ class Wave(object):
         left = min[2] - ALIEN_WIDTH/2
         right = max[2] + ALIEN_WIDTH/2
         if right <= GAME_WIDTH - ALIEN_H_WALK and self.mov == 1:
-            for row in self._aliens: 
+            for row in self._aliens:
                 for alien in row:
                     if not (not alien):
                         alien.image.x+=ALIEN_H_WALK
@@ -222,7 +221,7 @@ class Wave(object):
                 fire=False
         if input.is_key_down('spacebar') and fire:
             self.shipshoot.play()
-            self._bolts.append(Bolt(up=True, x=self.ship.image.x,y=self.ship.image.y,width=BOLT_WIDTH,height=BOLT_HEIGHT,fillcolor='red'))
+            self._bolts.append(Bolt(up=True, x=self.ship.image.x,y=self.ship.image.y+ALIEN_HEIGHT/2,width=BOLT_WIDTH,height=BOLT_HEIGHT,fillcolor='red'))
     def updateBolts(self):
         for i, bolt in enumerate(self._bolts):
             if bolt.velocity>0:
@@ -243,7 +242,7 @@ class Wave(object):
                             self.alienblast.play()
                             self._aliens[i][j] = None #.image = GSprite(source='ship-strip.png',format=(2,3),width=ALIEN_WIDTH,height=ALIEN_HEIGHT)
                             del self._bolts[k]
-                        if alien.image.y <= DEFENSE_LINE:
+                        if alien.image.y - ALIEN_HEIGHT/2 <= DEFENSE_LINE + 2:
                             self._aliens[i][j] = None
                             return False
     
@@ -255,10 +254,12 @@ class Wave(object):
                         self._lives-=1
                         if self._lives > 0:
                             del self._bolts[k]
+                            self.deleteShipBolt()
                             return True
                         else:
                             self.ship = None
                             del self._bolts[k]
+                            self.deleteShipBolt()
                             return False
             
     def aliensCount(self):
@@ -268,3 +269,8 @@ class Wave(object):
                 if not not alien:
                     count+=1
         return count
+    
+    def deleteShipBolt(self):
+        for i, bolt in enumerate(self._bolts):
+            if bolt.isPlayerBolt():
+                del self._bolts[i]
