@@ -130,6 +130,10 @@ class Wave(object):
         ship = self.shipDeath()
         if ship is not None:
             return ship
+        for row in self._aliens:
+            for alien in row:
+                if not not alien:
+                    print(alien.image)
         aliensLeft = self.aliensCount()
         if aliensLeft == 0:
             return 0
@@ -177,24 +181,24 @@ class Wave(object):
                         min[2] = alien.image.x
         left = min[2] - ALIEN_WIDTH/2
         right = max[2] + ALIEN_WIDTH/2
-        if right <= GAME_WIDTH - ALIEN_H_WALK and self.mov == 1:
+        if right <= GAME_WIDTH - ALIEN_H_SEP and self.mov == 1: #Crosscheck about alienhsep and alienhwalk
             for row in self._aliens:
                 for alien in row:
                     if not (not alien):
                         alien.image.x+=ALIEN_H_WALK
-        elif right > GAME_WIDTH - ALIEN_H_WALK and self.mov == 1:
+        elif right > GAME_WIDTH - ALIEN_H_SEP and self.mov == 1: #same as line 180
             for row in self._aliens: 
                 for alien in row:
                     if not (not alien):
                         alien.image.y-=ALIEN_V_WALK
                         alien.image.x-=ALIEN_H_WALK
             self.mov=-1
-        elif left >= ALIEN_H_WALK and self.mov == -1:
+        elif left >= ALIEN_H_SEP and self.mov == -1:
             for row in self._aliens: 
                 for alien in row:
                     if not (not alien):
                         alien.image.x-=ALIEN_H_WALK
-        elif left < ALIEN_H_WALK and self.mov == -1:
+        elif left < ALIEN_H_SEP and self.mov == -1:
             for row in self._aliens: 
                 for alien in row:
                     if not (not alien):
