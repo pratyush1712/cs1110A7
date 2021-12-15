@@ -22,8 +22,8 @@ You are free to add even more models to this module.  You may wish to do this
 when you add new features to your game, such as power-ups.  If you are unsure
 about whether to make a new class or not, please ask on Piazza.
 
-# YOUR NAME(S) AND NETID(S) HERE
-# DATE COMPLETED HERE
+# Pratyush Sudhakar (ps2245) and Yuvan Chugh (yc698)
+# December 9, 2021
 """
 from consts import *
 from game2d import *
@@ -38,7 +38,7 @@ from introcs.geom import Point2, Matrix
 # calls the method.
 
 
-class Ship(GImage):
+class Ship(GSprite):
     """
     A class to represent the game ship.
 
@@ -66,14 +66,25 @@ class Ship(GImage):
     # GETTERS AND SETTERS (ONLY ADD IF YOU NEED THEM)
 
     # INITIALIZER TO CREAT A NEW SHIP
-    def __init__(self, posH, posV):
-        self.image = GImage(x=posH ,y=posV, width=SHIP_WIDTH,height=SHIP_HEIGHT,source='ship.png')
-        
-    # METHODS TO MOVE THE SHIP AND CHECK FOR COLLISIONS
-    def moveRght(self):
-        self.image.x +=SHIP_MOVEMENT
+    def __init__(self, posX, posY):
+        super().__init__(x=posX, y=posY, width=SHIP_WIDTH,\
+            height=SHIP_HEIGHT,source=SHIP_BLOW_UP, format=(2,4))
 
+
+    # METHODS TO MOVE THE SHIP AND CHECK FOR COLLISIONS
+    def move(self, right = True):
+        """
+        moves the ship based on the direction
+
+        Parameter right: direction of the movement of ship
+        Precondition: right is a boolean value
+        """
+        if right:
+            self.x+=SHIP_MOVEMENT
+        else:
+            self.x-=SHIP_MOVEMENT
     
+
     def collides(self,bolt):
         """
         Returns True if the player bolt collides with this ship
@@ -85,20 +96,41 @@ class Ship(GImage):
         """
         if bolt.isPlayerBolt():
             return False
-        botRghtX = bolt.image.x + bolt.image.width/2
-        botRghtY = bolt.image.y - bolt.image.height/2
-        botLeftX = bolt.image.x - bolt.image.width/2
-        botLeftY = bolt.image.y - bolt.image.height/2
-        if self.image.contains((botRghtX,botRghtY)) or self.image.contains((botLeftX,botLeftY)):
-            return True
-        else:
-            return False
+        botRghtX = bolt.x + bolt.width/2
+        botRghtY = bolt.y - bolt.height/2
+        botLeftX = bolt.x - bolt.width/2
+        botLeftY = bolt.y - bolt.height/2
+        return self.contains((botRghtX,botRghtY)) or self.contains((botLeftX,botLeftY))
+
 
     # COROUTINE METHOD TO ANIMATE THE SHIP
-    
+    def animate(self):
+        """
+        Animates a  vertical up or down of the image over ANIMATION_SPEED seconds
+
+        This method is a coroutine that takes a break (so that the game
+        can redraw the image) every time it moves it. The coroutine takes
+        the dt as periodic input so it knows how many (parts of) seconds
+        to animate.
+
+        Parameter dt: The time since the last animation frame.
+        Precondition: dt is a float.
+
+        Parameter direction: The direction to slide.
+        Precondition: direction is a string and one of 'up' or 'down'.
+        """
+        time = 0
+        animating = True
+        while animating:
+            dt = (yield)
+            time +=dt
+            frames = time/DEATH_SPEED
+            amt = frames* self.count
+            self.frame = round(amt)
+            if time>DEATH_SPEED:
+                animating = False
 
     # ADD MORE METHODS (PROPERLY SPECIFIED) AS NECESSARY
-    
 
 
 class Alien(GImage):
@@ -120,12 +152,15 @@ class Alien(GImage):
     for extra gameplay features (like giving each alien a score value).
     """
     # IF YOU ADD ATTRIBUTES, LIST THEM BELOW
-    def __init__(self, posH, posV, aImage):
-        self.image = GImage(x=posH,y=posV, width=ALIEN_WIDTH,height=ALIEN_HEIGHT,source=aImage)
         
     # GETTERS AND SETTERS (ONLY ADD IF YOU NEED THEM)
 
     # INITIALIZER TO CREAT AN ALIEN
+    def __init__(self, **keywords):
+        super().__init__(**keywords)
+    
+
+    # METHOD TO CHECK FOR COLLISION (IF DESIRED)
     def collides(self,bolt):
         """
         Returns True if the player bolt collides with this alien
@@ -137,16 +172,11 @@ class Alien(GImage):
         """
         if not bolt.isPlayerBolt():
             return False
-        topRghtX = bolt.image.x + bolt.image.width/2
-        topRghtY = bolt.image.y + bolt.image.height/2
-        topLeftX = bolt.image.x - bolt.image.width/2
-        topLeftY = bolt.image.y - bolt.image.height/2
-        if self.image.contains((topRghtX,topRghtY)) or self.image.contains((topLeftX,topLeftY)):
-            return True
-        else:
-            return False
-
-    # METHOD TO CHECK FOR COLLISION (IF DESIRED)
+        topRghtX = bolt.x + bolt.width/2
+        topRghtY = bolt.y + bolt.height/2
+        topLeftX = bolt.x - bolt.width/2
+        topLeftY = bolt.y - bolt.height/2
+        return self.contains((topRghtX,topRghtY)) or self.contains((topLeftX,topLeftY))
 
     # ADD MORE METHODS (PROPERLY SPECIFIED) AS NECESSARY
 
@@ -178,21 +208,25 @@ class Bolt(GRectangle):
     # Invariant: _velocity is an int or float
 
     # LIST MORE ATTRIBUTES (AND THEIR INVARIANTS) HERE IF NECESSARY
-    def __init__(self, up, **keywords):
-        self.image=GRectangle(**keywords)
-        if up:
-            self.velocity = BOLT_SPEED
-        else:
-            self.velocity = -BOLT_SPEED
-    
-    def isPlayerBolt(self):
-        if self.velocity > 0:
-            return True
 
     # GETTERS AND SETTERS (ONLY ADD IF YOU NEED THEM)
 
     # INITIALIZER TO SE THE VELOCITY
+    def __init__(self, up, **keywords):
+        super().__init__(**keywords)
+        if up:
+            self.velocity = BOLT_SPEED
+        else:
+            self.velocity = -BOLT_SPEED
+
 
     # ADD MORE METHODS (PROPERLY SPECIFIED) AS NECESSARY
+    def isPlayerBolt(self):
+        """
+        Returns True if the bolt was shot by the ship, false otherwise.
+        """
+        if self.velocity > 0:
+            return True
+
 
 # IF YOU NEED ADDITIONAL MODEL CLASSES, THEY GO HERE
