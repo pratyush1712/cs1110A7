@@ -7,13 +7,12 @@ more classes, 99% of the time they belong in either the wave module or the
 models module. If you are unsure about where a new class should go, post a
 question on Piazza.
 
-# YOUR NAME(S) AND NETID(S) HERE
-# DATE COMPLETED HERE
+# Pratyush Sudhakar (ps2245) and Yuvan Chugh (yc698)
+# December 9, 2021
 """
 from consts import *
 from game2d import *
 from wave import *
-
 
 # PRIMARY RULE: Invaders can only access attributes in wave.py via getters/setters
 # Invaders is NOT allowed to access anything in models.py
@@ -69,6 +68,51 @@ class Invaders(GameApp):
     # You may have new attributes if you wish (you might want an attribute to
     # store any score across multiple waves). But you must document them.
     # LIST MORE ATTRIBUTES (AND THEIR INVARIANTS) HERE IF NECESSARY
+    #
+    # Attribute _lastkeys: the last key pressed by the user
+    # Invariant: _lastkeys
+    #
+    # Attribute _startkey: the key pressed to the start the game
+    # Invariant: _startkey is a String that contains the key on the keyboard 
+    # to be pressed to start the game
+    #
+    # Attribute _lives: The lives the user has till the end of the game
+    # Invariant: _lives
+    #
+    # Attribute _game
+    #
+    # Attribute _win: checks if the winner has won or not
+    # Invariant: _win is a Boolean value that checks if the user has won
+    #
+    # Attribute _alienblast: The sound when the alien blasts
+    # Invariant: _alienblast is a sound object
+    #
+    # Attribute _shipshoot: The sound when the ship shoots 
+    # Invariant: _shipshoot is a sound object
+    #
+    # Attribute _playerlose: The sound when the player loses
+    # Invariant: _playerlose is a sound object
+    #
+    # Attribute _playerWin: The sound when the player wins
+    # Invariant: _playerWin is a sound object
+    #
+    # Attribute sound: The background music
+    # Invariant: sound is a sound object
+    #
+    # Attribute _score: Displays player score
+    # Invariant: _score is a GLabel object
+    #
+    # Attribute _life: Displays the lives the user has left
+    # Invariant: _life is a GLabel Object
+    #
+    # Attribute _logo: Displays the logo/title of the game
+    # Invariant: _logo is a GLabel Object
+    #
+    # Attribute _inst: Displays the instruction to shoot bolts with the ship
+    # Invariant: _inst is a GLabel Object
+    #
+    # Attribute _blsc: Background of the game
+    # Invariant: _blsc is a GRectangle Object
 
     # DO NOT MAKE A NEW INITIALIZER!
 
@@ -88,18 +132,43 @@ class Invaders(GameApp):
         to play a game.
         """
         # IMPLEMENT ME
-        self.lastkeys = 0
-        self._wave = None
+        # constants and variables
+        self._lastkeys = 0
         self._state = STATE_INACTIVE
-        self.startkey = 's'
-        self.alienblast = Sound('alienblast.wav')
-        self.shipshoot = Sound('shipshoot.wav')
-        self.playerlose = Sound('playerlose.wav')
-        self.playerWin = Sound('sadigali.wav')
-        self.sound = Sound('beggin.wav')
+        self._startkey = 'enter'
+        self._wave = None
         self._lives = SHIP_LIVES
-        self._life = GLabel(text = f"lives: {self._lives}",font_size=60, left=5, bottom=5, x=120, y=24*GAME_HEIGHT/25)
-        self._text = GLabel(text = f"Press {self.startkey} to start",font_size=60, left=5, bottom=5, x=GAME_WIDTH/2, y=GAME_HEIGHT/2)
+        self._game = None
+        self._win = False
+        # sounds
+        self._alienblast = Sound('alienblast.wav')
+        self._shipshoot = Sound('shipshoot.wav')
+        self._playerlose = Sound('playerlose.wav')
+        self._playerWin = Sound('win.wav')
+        self._sound = Sound('bkg.wav')
+        # screen
+        self._blsc = GRectangle(width = GAME_WIDTH, height = GAME_HEIGHT, \
+            x=GAME_WIDTH/2, y=GAME_HEIGHT/2, fillcolor='light green')
+        # texts
+        self._score = GLabel(text = f"Player's score: 0",font_size=40,\
+             left=5, bottom=5, \
+            x=GAME_WIDTH - 200, y=30, font_name = 'Arcade.ttf')
+        self._life = GLabel(text = f"Lives: {self._lives}",font_size=60,\
+             left=5, bottom=5, \
+            x=120, y=24*GAME_HEIGHT/25, font_name = 'Arcade.ttf')
+        self._logo = GLabel(text = "War Against Humanity",\
+            font_size=60, left=5,\
+             bottom=5, x=GAME_WIDTH/2, y=24*GAME_HEIGHT/25, \
+                 font_name = 'Arcade.ttf')
+        self._inst = None
+        if self._state == STATE_INACTIVE:
+            self._text = self._text = GLabel(\
+                text = f"Press {self._startkey} to start",font_size=60,\
+                 left=5, bottom=5, x=GAME_WIDTH/2, y=GAME_HEIGHT/2, \
+                     font_name = 'Arcade.ttf')
+        else:
+            self._text = None
+        
         
     def update(self,dt):
         """
@@ -153,45 +222,19 @@ class Invaders(GameApp):
         Precondition: dt is a number (int or float)
         """
         # IMPLEMENT ME
-        self._logo = GLabel(text = "Sasta SpaceX",font_size=60, left=5, bottom=5, x=GAME_WIDTH/2, y=24*GAME_HEIGHT/25)
         if self._state == STATE_INACTIVE:
             self._determineState()
-            if self._state == STATE_NEWWAVE:
-                self._wave = Wave(self.playerlose, self.alienblast, self.shipshoot)
-                self._state = STATE_ACTIVE
-                self._text = None
+        elif self._state == STATE_NEWWAVE:
+            self.newwave()
         elif self._state == STATE_ACTIVE:
-            self._life = GLabel(text = f"lives: {self._lives}",font_size=60, left=5, bottom=5, x=120, y=24*GAME_HEIGHT/25)
-            resp = self._wave.update(self.input, dt, self.view, self.sound)
-            if resp:
-                self._lives-=1
-                self._state = STATE_PAUSED
-                self.playerlose.play()
-            elif resp is False:
-                self._lives=0
-                self._state = STATE_COMPLETE
-                self.win = False
-            elif resp == 0:
-                self._state = STATE_COMPLETE
-                self.win = True
+            self.active(dt)
         elif self._state == STATE_PAUSED:
-            self._life = GLabel(text = f"lives: {self._lives}",font_size=60, left=5, bottom=5, x=120, y=24*GAME_HEIGHT/25)
-            self._wave.draw(self.view)
-            self._text = GLabel(text = "press s to continue",font_size=60, left=5, bottom=5, x=GAME_WIDTH/2, y=GAME_HEIGHT/2)
-            if self.input.is_key_down('s'):
-                self._state = STATE_CONTINUE
-                self._text = None
+            self.paused()
         elif self._state == STATE_CONTINUE:
-            self._state = STATE_ACTIVE
+            self.continues()
         elif self._state == STATE_COMPLETE:
-            if self.win == False:
-                self.playerlose.play()
-                self._text = GLabel(text = "bhag bhosdike",font_size=60, left=5, bottom=5, x=GAME_WIDTH/2, y=GAME_HEIGHT/2)
-            elif self.win == True:
-                self._logo = None
-                self._lives = None
-                self._text = GLabel(text = "jeet gaya saala",font_size=120, left=5, bottom=5, x=GAME_WIDTH/2, y=GAME_HEIGHT/2)
-                self.playerWin.play()
+            self.complete()
+
 
     def draw(self):
         """
@@ -208,16 +251,21 @@ class Invaders(GameApp):
         from class.
         """
         # IMPLEMENT ME
+        #self._blsc.draw(self.view)
         if self._text != None:
             self._text.draw(self.view)
-        if not not self._logo:
+        if self._logo is not None:
             self._logo.draw(self.view)
-        if not not self._lives:
+        if self._life is not None:
             self._life.draw(self.view)
+        if self._score is not None:
+            self._score.draw(self.view)
+        if self._inst is not None:
+            self._inst.draw(self.view)
+        if self._wave is not None:
+            self._wave.draw(self.view)
 
-        # if self._state == STATE_ACTIVE:
-        #     self._wave.draw(self.view)
-
+        
     # HELPER METHODS FOR THE STATES GO HERE
     def _determineState(self):
         """
@@ -231,15 +279,104 @@ class Invaders(GameApp):
         we hold down the key. The user must release the
         key and press it again to change the state.
         """
-        # Determine the current number of keys pressed
         curr_keys = self.input.key_count
-
-        # Only change if we have just pressed the keys this animation frame
-        change = curr_keys > 0 and self.lastkeys == 0
-
-        if change and self.input.is_key_down(self.startkey):
-            # Click happened.  Change the state
+        change = curr_keys > 0 and self._lastkeys == 0
+        if change and self.input.is_key_down(self._startkey):
             self._state = STATE_NEWWAVE
-            # State changed; reset factor
         self.lastkeys = curr_keys
+    
+
+    def newwave(self):
+        """
+        Plays background music when a new wave of aliens start.
+        Creates a new instance of class Wave
+        sets state to STATE_ACTIVE
+        sets text to None
+        """
+
+        self._sound.play()
+        self._inst = GLabel(text = "Press spacebar to fire",\
+            font_size=30, left=5, bottom=5, \
+                x=GAME_WIDTH/2, y=DEFENSE_LINE+20, font_name = 'Arcade.ttf')
+        self._wave = Wave(self._playerlose, self._alienblast, self._shipshoot)
+        self._state = STATE_ACTIVE
+        self._text = None
+    
+    
+    def active(self, dt):
+        """
+        Updates the current wave
+        Plays background music when a new wave of aliens start.
+        Creates a new instance of class Wave
+        sets state to STATE_ACTIVE
+        sets text to None
+        """
+        self._wave.update(self.input, dt)
+        if self._wave.getShipDies() and self._lives > 1:
+            self._lives-=1
+            self._state = STATE_PAUSED
+        elif self._wave.getPlayerWin():
+            self._win = True
+            self._state = STATE_COMPLETE
+        elif self._wave.alienLine():
+            self._win = False
+            self._state = STATE_COMPLETE
+        elif self._wave.getShipDies() and self._lives == 1:
+            self._win = False
+            self._state = STATE_COMPLETE
+        self._score.text = f"Player's score: {self._wave.getScore()}"
+    
+    
+    def paused(self):
+        """
+        Updates the text of self._life
+        calls the function to draw self._wave objects
+        Changes state to STATE_CONTINUE if a key press is detected
+        """
+        self._life.text = f"lives: {self._lives}"
+        self._wave.draw(self.view)
+        self._text = GLabel(text = f"Press {self._startkey} to continue",\
+            font_size=60, left=5, bottom=5, x=GAME_WIDTH/2, y=GAME_HEIGHT/2, \
+                font_name = 'Arcade.ttf')
+        if self.input.is_key_down(self._startkey):
+            self._state = STATE_CONTINUE
+            self._text = None
         
+        
+    def continues(self):
+        """
+        Creates a new ship object
+        changes state to STATE_ACTIVE
+        """
+        self._wave.setShip(Ship(GAME_WIDTH/2, SHIP_BOTTOM+SHIP_HEIGHT/2))
+        self._wave.setShipDies(False)
+        self._wave.setPlayerWin(False)
+        self._state = STATE_ACTIVE
+    
+    
+    def complete(self):
+        """
+        Final state of the game, where wave is set to None, 
+        and music is played if the player wins
+        """
+        self._sound.stop()
+        self._life = None
+        self._inst = None
+        self._score = GLabel(text = f"Player's score: {self._wave.getScore()}",\
+            font_size=60, left=5, bottom=5, x=GAME_WIDTH/2, \
+                y=120, font_name = 'Arcade.ttf')
+        self._wave = None
+        if self._win == False:
+            self._logo.text =  'War Against Humanity'
+            self._text = GLabel(text = "You lost :(",font_size=60, \
+                left=5, bottom=5, x=GAME_WIDTH/2, y=4*GAME_HEIGHT/5, \
+                    font_name="Arcade.ttf")
+        elif self._win == True:
+            #self._sound = None
+            self._playerWin.play()
+            self._logo = None
+            self._lives = None
+            self._text = GLabel(text = "Well done! You have completed the game.",\
+                font_size=60, \
+                left=5, bottom=5, x=GAME_WIDTH/2, y=GAME_HEIGHT/2, font_name='Arcade.ttf')
+        self._state = 6
